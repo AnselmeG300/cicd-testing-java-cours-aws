@@ -7,11 +7,11 @@ def EMAIL_RECIPIENTS = "tbagor23@gmail.com"
 
 node {
     try {
-        stage('Initialize') {
-            def dockerHome = tool 'DockerLatest'
-            def mavenHome = tool 'MavenLatest'
-            env.PATH = "${dockerHome}/bin:${mavenHome}/bin:${env.PATH}"
-        }
+        // stage('Initialize') {
+        //     def dockerHome = tool 'DockerLatest'
+        //     def mavenHome = tool 'MavenLatest'
+        //     env.PATH = "${dockerHome}/bin:${mavenHome}/bin:${env.PATH}"
+        // }
 
         stage('Checkout') {
             checkout scm
