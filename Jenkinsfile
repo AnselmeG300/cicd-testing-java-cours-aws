@@ -57,7 +57,7 @@ node {
 
     } finally {
         deleteDir()
-        sendEmail(EMAIL_RECIPIENTS);
+        // sendEmail(EMAIL_RECIPIENTS);
     }
 
 }
