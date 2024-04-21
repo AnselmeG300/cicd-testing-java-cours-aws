@@ -9,12 +9,12 @@ pipeline {
     }
 
     stages {
-            // stage('Initialize') {
-            //     def dockerHome = tool 'DockerLatest'
-            //     def mavenHome = tool 'MavenLatest'
-            //     def javaHome = tool 'JavaLatest'
-            //     env.PATH = "${dockerHome}/bin:${javaHome}/bin:${mavenHome}/bin:${env.PATH}"
-            // }
+            stage('Initialize') {
+                def dockerHome = tool 'DockerLatest'
+                def mavenHome = tool 'MavenLatest'
+                def javaHome = tool 'JavaLatest'
+                env.PATH = "${dockerHome}/bin:${javaHome}/bin:${mavenHome}/bin:${env.PATH}"
+            }
 
             stage('Checkout') {
                 steps {
