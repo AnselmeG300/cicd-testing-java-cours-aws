@@ -8,15 +8,13 @@ pipeline {
         EMAIL_RECIPIENTS = "tbagor23@gmail.com"
     }
 
+    tools {
+        'DockerLatest',
+        'MavenLatest',
+        'JavaLatest'
+    }
+
     stages {
-            stage('Initialize') {
-                script {
-                    def dockerHome = tool 'DockerLatest'
-                    def mavenHome = tool 'MavenLatest'
-                    def javaHome = tool 'JavaLatest'
-                    env.PATH = "${dockerHome}/bin:${javaHome}/bin:${mavenHome}/bin:${env.PATH}"
-                }
-            }
 
             stage('Checkout') {
                 steps {
