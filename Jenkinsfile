@@ -17,44 +17,58 @@ pipeline {
             // }
 
             stage('Checkout') {
-                checkout scm
+                steps {
+                    checkout scm
+                }
             }
 
             stage('Build with test') {
-
-                sh "mvn clean install"
+                steps {
+                    sh "mvn clean install"
+                }
             }
 
             stage('Sonarqube Analysis') {
-                withSonarQubeEnv('SonarQubeLocalServer') {
-                    sh " mvn sonar:sonar -Dintegration-tests.skip=true -Dmaven.test.failure.ignore=true"
-                }
-                timeout(time: 1, unit: 'MINUTES') {
-                    def qg = waitForQualityGate() // Reuse taskId previously collected by withSonarQubeEnv
-                    if (qg.status != 'OK') {
-                        error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                steps {
+                    withSonarQubeEnv('SonarQubeLocalServer') {
+                        sh " mvn sonar:sonar -Dintegration-tests.skip=true -Dmaven.test.failure.ignore=true"
+                    }
+                    timeout(time: 1, unit: 'MINUTES') {
+                        def qg = waitForQualityGate() // Reuse taskId previously collected by withSonarQubeEnv
+                        if (qg.status != 'OK') {
+                            error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                        }
                     }
                 }
             }
 
             stage("Image Prune") {
-                imagePrune(CONTAINER_NAME)
+                steps {
+                    imagePrune(CONTAINER_NAME)
+                }
             }
+            
 
             stage('Image Build') {
-                imageBuild(CONTAINER_NAME, CONTAINER_TAG)
+                steps {
+                    imageBuild(CONTAINER_NAME, CONTAINER_TAG)
+                }
             }
+            
 
             stage('Push to Docker Registry') {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub_credentials', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                    pushToImage(CONTAINER_NAME, CONTAINER_TAG, USERNAME, PASSWORD)
+                steps {
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub_credentials', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                        pushToImage(CONTAINER_NAME, CONTAINER_TAG, USERNAME, PASSWORD)
+                    }
                 }
             }
 
             stage('Run App') {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub_credentials', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                    runApp(CONTAINER_NAME, CONTAINER_TAG, USERNAME, HTTP_PORT, ENV_NAME)
-
+                steps {
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub_credentials', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                        runApp(CONTAINER_NAME, CONTAINER_TAG, USERNAME, HTTP_PORT, ENV_NAME)
+                    }
                 }
             }
     }
