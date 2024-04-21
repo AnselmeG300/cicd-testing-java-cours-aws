@@ -23,6 +23,7 @@ pipeline {
             }
 
             stage('Build with test') {
+                agent any
                 steps {
                     script {
                         sh "mvn clean install"
