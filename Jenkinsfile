@@ -24,7 +24,9 @@ pipeline {
 
             stage('Build with test') {
                 steps {
-                    sh "mvn clean install"
+                    script {
+                        sh "mvn clean install"
+                    }
                 }
             }
 
@@ -46,14 +48,18 @@ pipeline {
 
             stage("Image Prune") {
                 steps {
+                    script {
                     imagePrune(CONTAINER_NAME)
+                    }
                 }
             }
             
 
             stage('Image Build') {
                 steps {
+                    script {
                     imageBuild(CONTAINER_NAME, CONTAINER_TAG)
+                    }
                 }
             }
             
