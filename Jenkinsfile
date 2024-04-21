@@ -1,66 +1,69 @@
-def CONTAINER_NAME = "calculator"
-def ENV_NAME = getEnvName(env.BRANCH_NAME)
-def CONTAINER_TAG = getTag(env.BUILD_NUMBER, env.BRANCH_NAME)
-def HTTP_PORT = getHTTPPort(env.BRANCH_NAME)
-def EMAIL_RECIPIENTS = "tbagor23@gmail.com"
-
-
-node {
-    try {
-        stage('Initialize') {
-            def dockerHome = tool 'DockerLatest'
-            def mavenHome = tool 'MavenLatest'
-            def javaHome = tool 'JavaLatest'
-            env.PATH = "${dockerHome}/bin:${javaHome}/bin:${mavenHome}/bin:${env.PATH}"
-        }
-
-        stage('Checkout') {
-            checkout scm
-        }
-
-        stage('Build with test') {
-
-            sh "mvn clean install"
-        }
-
-        stage('Sonarqube Analysis') {
-            withSonarQubeEnv('SonarQubeLocalServer') {
-                sh " mvn sonar:sonar -Dintegration-tests.skip=true -Dmaven.test.failure.ignore=true"
-            }
-            timeout(time: 1, unit: 'MINUTES') {
-                def qg = waitForQualityGate() // Reuse taskId previously collected by withSonarQubeEnv
-                if (qg.status != 'OK') {
-                    error "Pipeline aborted due to quality gate failure: ${qg.status}"
-                }
-            }
-        }
-
-        stage("Image Prune") {
-            imagePrune(CONTAINER_NAME)
-        }
-
-        stage('Image Build') {
-            imageBuild(CONTAINER_NAME, CONTAINER_TAG)
-        }
-
-        stage('Push to Docker Registry') {
-            withCredentials([usernamePassword(credentialsId: 'dockerhub_credentials', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                pushToImage(CONTAINER_NAME, CONTAINER_TAG, USERNAME, PASSWORD)
-            }
-        }
-
-        stage('Run App') {
-            withCredentials([usernamePassword(credentialsId: 'dockerhub_credentials', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                runApp(CONTAINER_NAME, CONTAINER_TAG, USERNAME, HTTP_PORT, ENV_NAME)
-
-            }
-        }
-
-    } finally {
-        deleteDir()
-        // sendEmail(EMAIL_RECIPIENTS);
+pipeline {
+    agent any
+    environment {
+        CONTAINER_NAME = "calculator"
+        ENV_NAME = getEnvName(env.BRANCH_NAME)
+        CONTAINER_TAG = getTag(env.BUILD_NUMBER, env.BRANCH_NAME)
+        HTTP_PORT = getHTTPPort(env.BRANCH_NAME)
+        EMAIL_RECIPIENTS = "tbagor23@gmail.com"
     }
 
+    stages {
+        try {
+            // stage('Initialize') {
+            //     def dockerHome = tool 'DockerLatest'
+            //     def mavenHome = tool 'MavenLatest'
+            //     def javaHome = tool 'JavaLatest'
+            //     env.PATH = "${dockerHome}/bin:${javaHome}/bin:${mavenHome}/bin:${env.PATH}"
+            // }
+
+            stage('Checkout') {
+                checkout scm
+            }
+
+            stage('Build with test') {
+
+                sh "mvn clean install"
+            }
+
+            stage('Sonarqube Analysis') {
+                withSonarQubeEnv('SonarQubeLocalServer') {
+                    sh " mvn sonar:sonar -Dintegration-tests.skip=true -Dmaven.test.failure.ignore=true"
+                }
+                timeout(time: 1, unit: 'MINUTES') {
+                    def qg = waitForQualityGate() // Reuse taskId previously collected by withSonarQubeEnv
+                    if (qg.status != 'OK') {
+                        error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                    }
+                }
+            }
+
+            stage("Image Prune") {
+                imagePrune(CONTAINER_NAME)
+            }
+
+            stage('Image Build') {
+                imageBuild(CONTAINER_NAME, CONTAINER_TAG)
+            }
+
+            stage('Push to Docker Registry') {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub_credentials', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                    pushToImage(CONTAINER_NAME, CONTAINER_TAG, USERNAME, PASSWORD)
+                }
+            }
+
+            stage('Run App') {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub_credentials', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                    runApp(CONTAINER_NAME, CONTAINER_TAG, USERNAME, HTTP_PORT, ENV_NAME)
+
+                }
+            }
+
+        } finally {
+            // sendEmail(EMAIL_RECIPIENTS);
+        }
+
+    }
 }
 
 def imagePrune(containerName) {
