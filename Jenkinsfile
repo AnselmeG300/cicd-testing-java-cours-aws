@@ -9,7 +9,6 @@ pipeline {
     }
 
     stages {
-        try {
             // stage('Initialize') {
             //     def dockerHome = tool 'DockerLatest'
             //     def mavenHome = tool 'MavenLatest'
@@ -58,11 +57,6 @@ pipeline {
 
                 }
             }
-
-        } finally {
-            // sendEmail(EMAIL_RECIPIENTS);
-        }
-
     }
 }
 
