@@ -8,11 +8,11 @@ pipeline {
         EMAIL_RECIPIENTS = "tbagor23@gmail.com"
     }
 
-    tools {
-        'DockerLatest',
-        'MavenLatest',
-        'JavaLatest'
-    }
+    // tools {
+    //     'DockerLatest',
+    //     'MavenLatest',
+    //     'JavaLatest'
+    // }
 
     stages {
 
